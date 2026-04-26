@@ -1,13 +1,10 @@
 package ba.etfrma.spirala1.kvizaplikacija.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import ba.etfrma.spirala1.kvizaplikacija.data.GrupaStaticData
 import ba.etfrma.spirala1.kvizaplikacija.data.PredmetStaticData
-import ba.etfrma.spirala1.kvizaplikacija.model.Predmet
 import ba.etfrma.spirala1.kvizaplikacija.model.Grupa
+import ba.etfrma.spirala1.kvizaplikacija.model.Predmet
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,13 +34,12 @@ class UpisViewModel : ViewModel() {
                 _odabranPredmet.value != null &&
                 _odabranaGrupa.value != null
     }
+
     fun odaberiGodinu(godina: Int) {
         _odabranaGodina.value = godina
-
         _odabranPredmet.value = null
         _odabranaGrupa.value = null
         _dostupneGrupe.value = emptyList()
-
         _dostupniPredmeti.value = PredmetStaticData.getNeupisani()
             .filter { it.godina == godina }
         azurirajMozeDaSeUpise()
@@ -61,10 +57,13 @@ class UpisViewModel : ViewModel() {
         azurirajMozeDaSeUpise()
     }
 
+    /**
+     * Upisuje korisnika na predmet i resetuje formu.
+     * KvizViewModel.osvjeziKvizove() treba pozvati nakon ovoga.
+     */
     fun upisi() {
         val predmet = _odabranPredmet.value ?: return
         PredmetStaticData.upisiNaPredmet(predmet)
-
         _odabranaGodina.value = null
         _odabranPredmet.value = null
         _odabranaGrupa.value = null
