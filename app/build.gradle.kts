@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "ba.etfrma.spirala1.kvizaplikacija"
+    namespace = "ba.etf.rma26.projekat"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -51,6 +51,8 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.junit.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -60,4 +62,20 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.6.1")
     implementation("androidx.compose.material:material-icons-core:1.6.0")
+
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("io.mockk:mockk:1.13.10")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("org.jetbrains.kotlin:kotlin-reflect:2.0.0")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+
 }
