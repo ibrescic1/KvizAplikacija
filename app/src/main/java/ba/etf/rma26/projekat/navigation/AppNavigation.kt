@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import ba.etf.rma26.projekat.ui.screens.FilterScreen
+import ba.etf.rma26.projekat.ui.screens.KvizDetaljiScreen
 import ba.etf.rma26.projekat.ui.screens.KvizTakeScreen
 import ba.etf.rma26.projekat.ui.screens.KvizoviScreen
 import ba.etf.rma26.projekat.viewmodel.KvizTakeViewModel
@@ -40,9 +41,30 @@ fun AppNavigation(navController: NavHostController) {
         composable(NavRoutes.KVIZOVI_SCREEN) {
             KvizoviScreen(
                 kvizViewModel = kvizViewModel,
+                onKvizKliknut = { idKviza ->
+                    navController.navigate(NavRoutes.kvizTakeRoute(idKviza))
+                },
+
+                onDetaljiKliknut = { idKviza ->
+                    navController.navigate(NavRoutes.kvizDetaljiRoute(idKviza))
+                },
                 onBack = {
                     navController.popBackStack()
                 }
+            )
+        }
+
+        composable(
+            route = NavRoutes.KVIZ_DETALJI_SCREEN,
+            arguments = listOf(navArgument("idKviza") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val idKviza = backStackEntry.arguments?.getInt("idKviza") ?: return@composable
+            KvizDetaljiScreen(
+                idKviza = idKviza,
+                onZapocniKviz = { id ->
+                    navController.navigate(NavRoutes.kvizTakeRoute(id))
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 

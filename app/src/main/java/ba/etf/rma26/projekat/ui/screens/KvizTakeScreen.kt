@@ -26,6 +26,9 @@ fun KvizTakeScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val greska by viewModel.greska.collectAsState()
 
+    val odabraniOdgovori by viewModel.odabraniOdgovori.collectAsState()
+    val porukeOdgovora by viewModel.porukeOdgovora.collectAsState()
+
     LaunchedEffect(idKviza) {
         viewModel.zapocniKviz(idKviza)
     }
@@ -76,17 +79,38 @@ fun KvizTakeScreen(
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
+
+                                    val odabraniIndeks = odabraniOdgovori[pitanje.id]
+
                                     pitanje.opcije.forEachIndexed { index, opcija ->
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             RadioButton(
-                                                selected = false,
+                                                selected = odabraniIndeks == index,
                                                 onClick = {
-                                                    viewModel.posaljiOdgovor(pitanje.id, index)
+                                                    // dozvoljavamo promjenu ako je kliknuta bilo koja druga opcija
+                                                    if (odabraniIndeks != index) {
+                                                        viewModel.posaljiOdgovor(pitanje.id, index)
+                                                    }
                                                 },
                                                 modifier = Modifier.testTag("odgovor_${pitanje.id}_$index")
                                             )
                                             Text(opcija)
                                         }
+                                    }
+
+                                    porukeOdgovora[pitanje.id]?.let { poruka ->
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        val bojaTeksta = if (poruka == "Tačno!")
+                                            MaterialTheme.colorScheme.primary
+                                        else
+                                            MaterialTheme.colorScheme.error
+
+                                        Text(
+                                            text = poruka,
+                                            color = bojaTeksta,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            modifier = Modifier.padding(start = 4.dp)
+                                        )
                                     }
                                 }
                             }

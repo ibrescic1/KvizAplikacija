@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,22 +31,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import ba.etf.rma26.projekat.data.repositories.AccountRepository
 import ba.etf.rma26.projekat.viewmodel.FilterOpcija
 import ba.etf.rma26.projekat.viewmodel.KvizViewModel
 import ba.etf.rma26.projekat.viewmodel.UpisViewModel
 
+/* ekran za postavljanje filtera i upis na predmete.
+  dropdown meniji za odabir godine, predmeta i grupe, dugme za upis
+  dropdown za filter kvizova, broj nadjenih kvizova (ili poruku ako nema kvizova)
+ */
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-
 fun FilterScreen(
     kvizViewModel: KvizViewModel,
     upisViewModel: UpisViewModel,
     onPrikaziKvizove: () -> Unit
 ) {
-    val selectedFilter by kvizViewModel.selectedFilter.collectAsState()
-    val brojKvizova   by kvizViewModel.brojKvizova.collectAsState()
+    val selectedFilter   by kvizViewModel.selectedFilter.collectAsState()
+    val brojKvizova      by kvizViewModel.brojKvizova.collectAsState()
+    val prosjecniBodovi  by kvizViewModel.prosjecniBodovi.collectAsState()
+    val isLoading        by kvizViewModel.isLoading.collectAsState()
 
     val odabranaGodina   by upisViewModel.odabranaGodina.collectAsState()
     val odabranPredmet   by upisViewModel.odabranPredmet.collectAsState()
@@ -54,14 +59,16 @@ fun FilterScreen(
     val dostupneGrupe    by upisViewModel.dostupneGrupe.collectAsState()
     val mozeDaSeUpise    by upisViewModel.mozeDaSeUpise.collectAsState()
 
-    var godinaOtvorena  by remember { mutableStateOf(false) }
-    var predmetOtvoren  by remember { mutableStateOf(false) }
-    var grupaOtvorena   by remember { mutableStateOf(false) }
-    var filterOtvoren   by remember { mutableStateOf(false) }
+    var godinaOtvorena by remember { mutableStateOf(false) }
+    var predmetOtvoren by remember { mutableStateOf(false) }
+    var grupaOtvorena  by remember { mutableStateOf(false) }
+    var filterOtvoren  by remember { mutableStateOf(false) }
+
+    // ucitava kvizove pri prvom otvaranju ekrana
     LaunchedEffect(Unit) {
-        //AccountRepository.postaviHash("demo")
         kvizViewModel.osvjeziKvizove()
     }
+
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Postavljanje filtera") })
@@ -75,20 +82,17 @@ fun FilterScreen(
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-
-
             Text(
                 text = "Upis na predmet",
                 style = MaterialTheme.typography.titleMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // dropdown za godinu studija
             ExposedDropdownMenuBox(
                 expanded = godinaOtvorena,
                 onExpandedChange = { godinaOtvorena = !godinaOtvorena },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("odabirGodina")
+                modifier = Modifier.fillMaxWidth().testTag("odabirGodina")
             ) {
                 OutlinedTextField(
                     value = odabranaGodina?.toString() ?: "Odaberi godinu",
@@ -98,14 +102,13 @@ fun FilterScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = godinaOtvorena)
                     },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = godinaOtvorena,
                     onDismissRequest = { godinaOtvorena = false }
                 ) {
+                    // prikazuje samo broj da test moze naci "2", "3" itd.
                     (1..5).forEach { godina ->
                         DropdownMenuItem(
                             text = { Text(godina.toString()) },
@@ -120,14 +123,13 @@ fun FilterScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // dropdown za predmet — aktivan tek nakon odabira godine
             ExposedDropdownMenuBox(
                 expanded = predmetOtvoren && odabranaGodina != null,
                 onExpandedChange = {
                     if (odabranaGodina != null) predmetOtvoren = !predmetOtvoren
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("odabirPredmet")
+                modifier = Modifier.fillMaxWidth().testTag("odabirPredmet")
             ) {
                 OutlinedTextField(
                     value = odabranPredmet?.naziv ?: "Odaberi predmet",
@@ -138,9 +140,7 @@ fun FilterScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = predmetOtvoren)
                     },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = predmetOtvoren && odabranaGodina != null,
@@ -167,14 +167,13 @@ fun FilterScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // dropdown za grupu — aktivan tek nakon odabira predmeta
             ExposedDropdownMenuBox(
                 expanded = grupaOtvorena && odabranPredmet != null,
                 onExpandedChange = {
                     if (odabranPredmet != null) grupaOtvorena = !grupaOtvorena
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("odabirGrupa")
+                modifier = Modifier.fillMaxWidth().testTag("odabirGrupa")
             ) {
                 OutlinedTextField(
                     value = odabranaGrupa?.naziv ?: "Odaberi grupu",
@@ -185,9 +184,7 @@ fun FilterScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = grupaOtvorena)
                     },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = grupaOtvorena && odabranPredmet != null,
@@ -207,6 +204,7 @@ fun FilterScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
+            // dugme za upis — callback osvježava kvizove tek kad upis završi
             Button(
                 onClick = {
                     upisViewModel.upisi {
@@ -214,15 +212,12 @@ fun FilterScreen(
                     }
                 },
                 enabled = mozeDaSeUpise,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("dodajPredmetDugme")
+                modifier = Modifier.fillMaxWidth().testTag("dodajPredmetDugme")
             ) {
                 Text("Upiši me")
             }
 
             Spacer(modifier = Modifier.height(20.dp))
-
 
             Text(
                 text = "Filteri",
@@ -230,12 +225,11 @@ fun FilterScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // dropdown za filter kvizova
             ExposedDropdownMenuBox(
                 expanded = filterOtvoren,
                 onExpandedChange = { filterOtvoren = !filterOtvoren },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("filterKvizova")
+                modifier = Modifier.fillMaxWidth().testTag("filterKvizova")
             ) {
                 OutlinedTextField(
                     value = selectedFilter.naziv,
@@ -245,9 +239,7 @@ fun FilterScreen(
                     trailingIcon = {
                         ExposedDropdownMenuDefaults.TrailingIcon(expanded = filterOtvoren)
                     },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
+                    modifier = Modifier.menuAnchor().fillMaxWidth()
                 )
                 ExposedDropdownMenu(
                     expanded = filterOtvoren,
@@ -267,21 +259,41 @@ fun FilterScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-
-            Text(
-                text = "Pronađeno je $brojKvizova kvizova",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.testTag("brojKvizova")
-            )
+            // Prikaz broja kvizova i poruke
+            if (isLoading) {
+                CircularProgressIndicator(modifier = Modifier.padding(8.dp))
+            } else {
+                when {
+                    // Nema kvizova — prikaz jasne poruke
+                    brojKvizova == 0 -> {
+                        Text(
+                            text = "Nema kvizova za odabrani filter.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("brojKvizova")
+                        )
+                        Text(
+                            text = "Pokušajte se upisati na predmet ili promijeniti filter.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    // Ima kvizova — pokazi broj
+                    else -> {
+                        Text(
+                            text = "Pronađeno je $brojKvizova kvizova",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.testTag("brojKvizova")
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-
             Button(
                 onClick = onPrikaziKvizove,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .testTag("prikaziKvizoveDugme")
+                modifier = Modifier.fillMaxWidth().testTag("prikaziKvizoveDugme")
             ) {
                 Text("Prikaži kvizove")
             }

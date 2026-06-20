@@ -19,6 +19,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import ba.etf.rma26.projekat.Konstante
+import ba.etf.rma26.projekat.data.models.KvizStatus
+import ba.etf.rma26.projekat.data.models.getStatus
 import ba.etf.rma26.projekat.ui.components.KvizItem
 import ba.etf.rma26.projekat.viewmodel.KvizViewModel
 
@@ -27,6 +30,8 @@ import ba.etf.rma26.projekat.viewmodel.KvizViewModel
 @Composable
 fun KvizoviScreen(
     kvizViewModel: KvizViewModel,
+    onKvizKliknut: (Int) -> Unit,
+    onDetaljiKliknut: (Int) -> Unit,
     onBack: () -> Unit
 ) {
     val kvizovi        by kvizViewModel.kvizovi.collectAsState()
@@ -57,7 +62,22 @@ fun KvizoviScreen(
                 items = kvizovi,
                 key = { kviz -> "${kviz.naziv}_${kviz.nazivPredmeta}_${kviz.nazivGrupe}" }
             ) { kviz ->
-                KvizItem(kviz = kviz)
+                //  status kviza
+                val status = kviz.getStatus(Konstante.REFERENTNI_DATUM)
+
+                KvizItem(
+                    kviz = kviz,
+                    onClick = {
+                        // Samo aktivan kviz (zeleni) ide direktno na rješavanje
+                        // Svi ostali idu na detalje
+                        if (status == KvizStatus.ZELENA) {
+                            onKvizKliknut(kviz.id)
+                        } else {
+                            onDetaljiKliknut(kviz.id)
+                        }
+                    },
+                    onDetaljiKliknut = { onDetaljiKliknut(kviz.id) }
+                )
             }
         }
     }

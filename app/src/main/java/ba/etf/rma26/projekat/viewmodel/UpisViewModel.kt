@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class UpisViewModel : ViewModel() {
-
+    // cuvamo stanja state flowom
     private val _dostupniPredmeti = MutableStateFlow<List<Predmet>>(emptyList())
     val dostupniPredmeti: StateFlow<List<Predmet>> = _dostupniPredmeti
 
